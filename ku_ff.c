@@ -13,13 +13,6 @@ int Search(int start, int end, int a1, int a2, int input[])
     }
     return nums;
 }
-
-// int producer(int limit1, int val)
-// {
-
-//     return 0;
-// }
-
 int receiver(int limit)
 {
     key_t ipckey;
@@ -52,6 +45,10 @@ int receiver(int limit)
             result += mymsg.value;
         }
     }
+    if(msgctl(mqdes,IPC_RMID,NULL)==-1){
+                printf("msgctl failed\n");
+                exit(0);
+        }
     return result;
 }
 
@@ -69,10 +66,10 @@ int main(int argc, char *argv[])
     {
         printf("첫번째 수가 두번째 수보다 클 수 없습니다. ");
     }
-    else if (range[0] == range[1])
-    {
-        printf("두 값이 같습니다.");
-    }
+    // else if (range[0] == range[1])
+    // {
+    //     printf("두 값이 같습니다.");
+    // }
     else
     {
         //쓰레드 생성
@@ -132,8 +129,6 @@ int main(int argc, char *argv[])
             }
             else
             {
-
-                //리시버
                 //reaping 해줘야 함
                 int ret = waitpid(pid[i], &childState, 0);
                 // printf("부모 종료 %d %d %d\n", ret, WIFEXITED(childState), WEXITSTATUS(childState));
