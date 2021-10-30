@@ -6,6 +6,6 @@
 #include <sys/types.h>
 #include <math.h>
 
-#define NUMS 18
+#define NUMS 15
 
-int input[NUMS] = {12,25,32,41,34,13,10,22,29,41,300,2125,3413,533,1,3,5,1};
+int input[NUMS] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};

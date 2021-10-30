@@ -1,4 +1,5 @@
-#include "ku_ff_input.h"
+#include "ku_ps_input.h"
+
 
 int Search(int start, int end, int a1, int a2, int input[])
 {
@@ -13,34 +14,11 @@ int Search(int start, int end, int a1, int a2, int input[])
     return nums;
 }
 
-int producer(int limit1, int val)
-{
-    key_t ipckey;
-    int mqdes, k;
-    size_t buf_len;
-    struct
-    {
-        long id;
-        int value;
-    } mymsg;
-    buf_len = sizeof(mymsg.value);
-    ipckey = ftok("./tmp/foo", 1946);
-    mqdes = msgget(ipckey, IPC_CREAT | 0600);
-    if (mqdes < 0)
-    {
-        perror("msgget()");
-        exit(0);
-    }
-    mymsg.id = limit1 + 1;
-    mymsg.value = val;
-    printf("Sending a Message %d %ld\n", mymsg.value, mymsg.id);
-    if (msgsnd(mqdes, &mymsg, buf_len, 0) == -1)
-    {
-        perror("msgsnd()");
-        exit(0);
-    }
-    return 0;
-}
+// int producer(int limit1, int val)
+// {
+
+//     return 0;
+// }
 
 int receiver(int limit)
 {
@@ -126,7 +104,30 @@ int main(int argc, char *argv[])
                 // printf("%d %d \n", p, getpid());
 
                 //메세지 큐
-                producer(i, p);
+                key_t ipckey;
+                int mqdes, k;
+                size_t buf_len;
+                struct
+                {
+                    long id;
+                    int value;
+                } mymsg;
+                buf_len = sizeof(mymsg.value);
+                ipckey = ftok("./tmp/foo", 1946);
+                mqdes = msgget(ipckey, IPC_CREAT | 0600);
+                if (mqdes < 0)
+                {
+                    perror("msgget()");
+                    exit(0);
+                }
+                mymsg.id = i + 1;
+                mymsg.value = p;
+                printf("Sending a Message %d %ld\n", mymsg.value, mymsg.id);
+                if (msgsnd(mqdes, &mymsg, buf_len, 0) == -1)
+                {
+                    perror("msgsnd()");
+                    exit(0);
+                }
                 exit(100 + i);
             }
             else
