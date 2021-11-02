@@ -1,8 +1,4 @@
 #include "ku_ps_input.h"
-#include <time.h>
-
-clock_t times(struct tms *buffer);
-
 
 int Search(int start, int end, int a1, int a2, int input[])
 {
@@ -44,7 +40,7 @@ int receiver(int limit)
         }
         else
         {
-            printf("Received Message %d %ld\n", mymsg.value, mymsg.id);
+            // printf("Received Message %d의 값을 %ld번 프로세스가 받았습니다.\n", mymsg.value, mymsg.id);
             result += mymsg.value;
         }
     }
@@ -58,26 +54,9 @@ int receiver(int limit)
 
 int main(int argc, char *argv[])
 {
-    
     int k;
-    time_t t;
-    struct tms mytms;
-    clock_t t1, t2;
-
-    if((t1=times(&mytms)==-1)){
-        perror("times1");
-        exit(1);
-    }
-    for(k=0; k<999999; k++){
-        time(&t);
-    }
-    if((t2=times(&mytms)==-1)){
-        perror("times2");
-        exit(1);
-    }
-
-
     int range[3];
+
     for (int i = 0; i < 3; i++)
     {
         range[i] = atoi(argv[i + 1]);
@@ -90,6 +69,8 @@ int main(int argc, char *argv[])
     else
     {
         //프로세스 생성
+        clock_t start, end;
+        double result;
         pid_t pid[range[2]];
         int childState;
         // for(int i =0; i<10; i++){
@@ -112,15 +93,14 @@ int main(int argc, char *argv[])
             arr[i] = arr[i - 1] + process_num;
         }
         //자식프로세스들이 처리해야할일 구현 함수
+        start = clock();
         for (int i = 0; i < range[2]; i++)
         {
             if ((pid[i] = fork()) == 0)
             {
                 //자식 프로세스들이 할것
-                //프로세스별로 숫자를 어떻게 나눌까
                 int p = Search(arr[i], arr[i + 1], range[0], range[1], input);
-                // printf("%d %d \n", p, getpid());
-                // printf("%d %d \n ", arr[i], arr[i+1]);
+                
                 //메세지 큐
                 key_t ipckey;
                 int mqdes, k;
@@ -140,7 +120,7 @@ int main(int argc, char *argv[])
                 }
                 mymsg.id = i + 1;
                 mymsg.value = p;
-                printf("Sending a Message %d %ld\n", mymsg.value, mymsg.id);
+                printf("%d의 값을 %d번 프로세스가 보냈습니다.\n", mymsg.value, getpid());
                 if (msgsnd(mqdes, &mymsg, buf_len, 0) == -1)
                 {
                     perror("msgsnd()");
@@ -152,15 +132,14 @@ int main(int argc, char *argv[])
             {
                 //reaping 해줘야 함
                 int ret = waitpid(pid[i], &childState, 0);
-                // printf("부모 종료 %d %d %d\n", ret, WIFEXITED(childState), WEXITSTATUS(childState));
             }
         }
+        end = clock();
         //메세지큐로 모든 수를 받아오는것!
         int kk = receiver(range[2]);
         printf("%d\n", kk);
-        printf("RT : %.1f sec\n", (double)(t2-t1)/CLK_TCK);
-        printf("UT : %.1f sec\n", (double)(mytms.tms_utime)/CLK_TCK);
-        printf("ST : %.1f sec\n", (double)(mytms.tms_stime)/CLK_TCK);
+        result = (double)(end - start);
+        printf("%0.1f", result);
         return 0;
     }
 }
