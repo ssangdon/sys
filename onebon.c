@@ -1,8 +1,5 @@
 #include "ku_ps_input.h"
 
-#define NAME "/m_queue"
-#define MSG_SIZE 100000
-#define MAX_PRIO 5
 
 int Search(int start, int end, int a1, int a2, int input[])
 {
@@ -104,56 +101,32 @@ int main(int argc, char *argv[])
             {
                 //자식 프로세스들이 할것
                 int p = Search(arr[i], arr[i + 1], range[0], range[1], input);
-
-                //sys V 메세지 큐
-                // key_t ipckey;
-                // int mqdes, k;
-                // size_t buf_len;
-                // struct
-                // {
-                //     long id;
-                //     int value;
-                // } mymsg;
-                // buf_len = sizeof(mymsg.value);
-                // ipckey = ftok("./tmp/foo", 1998);
-                // mqdes = msgget(ipckey, IPC_CREAT | 0600);
-                // if (mqdes < 0)
-                // {
-                //     perror("msgget()");
-                //     exit(0);
-                // }
-                // mymsg.id = i + 1;
-                // mymsg.value = p;
-                // printf("%d의 값을 %d번 프로세스가 보냈습니다.\n", mymsg.value, getpid());
-                // if (msgsnd(mqdes, &mymsg, buf_len, 0) == -1)
-                // {
-                //     perror("msgsnd()");
-                //     exit(0);
-                // }
-                struct mq_attr attr;
-                int value = p;
-                unsigned int prio;
-                mqd_t mqdes;
-
-                attr.mq_maxmsg = 10000;
-                attr.mq_msgsize = 4;
-                mqdes = mq_open(NAME, O_CREAT | O_WRONLY, 0600, &attr);
+                
+                //메세지 큐
+                key_t ipckey;
+                int mqdes, k;
+                size_t buf_len;
+                struct
+                {
+                    long id;
+                    int value;
+                } mymsg;
+                buf_len = sizeof(mymsg.value);
+                ipckey = ftok("./tmp/foo", 1998);
+                mqdes = msgget(ipckey, IPC_CREAT | 0600);
                 if (mqdes < 0)
                 {
-                    perror("mq_open()");
+                    perror("msgget()");
                     exit(0);
                 }
-                printf("Sending a message (val: %d, prio: %d)\n",
-                        value, prio);
-                if (mq_send(mqdes, (char *)&value, MSG_SIZE, prio) == -1)
+                mymsg.id = i + 1;
+                mymsg.value = p;
+                printf("%d의 값을 %d번 프로세스가 보냈습니다.\n", mymsg.value, getpid());
+                if (msgsnd(mqdes, &mymsg, buf_len, 0) == -1)
                 {
-                    perror("mq_send()");
-                    break;
+                    perror("msgsnd()");
+                    exit(0);
                 }
-                else{
-                    printf("전송 성공!\n");
-                }
-                mq_close(mqdes);
                 exit(100 + i);
             }
             else
