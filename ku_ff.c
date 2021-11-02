@@ -1,4 +1,7 @@
 #include "ku_ps_input.h"
+#include <time.h>
+
+clock_t times(struct tms *buffer);
 
 
 int Search(int start, int end, int a1, int a2, int input[])
@@ -25,7 +28,7 @@ int receiver(int limit)
         int value;
     } mymsg;
     buf_len = sizeof(mymsg.value);
-    ipckey = ftok("./tmp/foo", 1946);
+    ipckey = ftok("./tmp/foo", 1998);
     mqdes = msgget(ipckey, IPC_CREAT | 0600);
     if (mqdes < 0)
     {
@@ -45,34 +48,48 @@ int receiver(int limit)
             result += mymsg.value;
         }
     }
-    if(msgctl(mqdes,IPC_RMID,NULL)==-1){
-                printf("msgctl failed\n");
-                exit(0);
-        }
+    if (msgctl(mqdes, IPC_RMID, NULL) == -1)
+    {
+        printf("msgctl failed\n");
+        exit(0);
+    }
     return result;
 }
 
 int main(int argc, char *argv[])
 {
+    
+    int k;
+    time_t t;
+    struct tms mytms;
+    clock_t t1, t2;
+
+    if((t1=times(&mytms)==-1)){
+        perror("times1");
+        exit(1);
+    }
+    for(k=0; k<999999; k++){
+        time(&t);
+    }
+    if((t2=times(&mytms)==-1)){
+        perror("times2");
+        exit(1);
+    }
+
+
     int range[3];
     for (int i = 0; i < 3; i++)
     {
         range[i] = atoi(argv[i + 1]);
     }
-    // for(int i =0; i<3; i++){
-    //     printf("%d\n", range[i]);
-    // }
     if (range[0] > range[1])
     {
-        printf("첫번째 수가 두번째 수보다 클 수 없습니다. ");
+        printf("첫번째 수가 두번째 수보다 클 수 없습니다.");
+        return 0;
     }
-    // else if (range[0] == range[1])
-    // {
-    //     printf("두 값이 같습니다.");
-    // }
     else
     {
-        //쓰레드 생성
+        //프로세스 생성
         pid_t pid[range[2]];
         int childState;
         // for(int i =0; i<10; i++){
@@ -85,7 +102,11 @@ int main(int argc, char *argv[])
         }
         arr[range[2]] = NUMS;
         int process_num = (NUMS / range[2]);
-        // int remain_num = NUMS%range[2];
+        //마지막 프로세스로 값이 몰리는 것을 방지하기 위한 코드
+        if (process_num == 0)
+        {
+            process_num = 1;
+        }
         for (int i = 1; i < range[2]; i++)
         {
             arr[i] = arr[i - 1] + process_num;
@@ -99,7 +120,7 @@ int main(int argc, char *argv[])
                 //프로세스별로 숫자를 어떻게 나눌까
                 int p = Search(arr[i], arr[i + 1], range[0], range[1], input);
                 // printf("%d %d \n", p, getpid());
-
+                // printf("%d %d \n ", arr[i], arr[i+1]);
                 //메세지 큐
                 key_t ipckey;
                 int mqdes, k;
@@ -110,7 +131,7 @@ int main(int argc, char *argv[])
                     int value;
                 } mymsg;
                 buf_len = sizeof(mymsg.value);
-                ipckey = ftok("./tmp/foo", 1946);
+                ipckey = ftok("./tmp/foo", 1998);
                 mqdes = msgget(ipckey, IPC_CREAT | 0600);
                 if (mqdes < 0)
                 {
@@ -134,8 +155,12 @@ int main(int argc, char *argv[])
                 // printf("부모 종료 %d %d %d\n", ret, WIFEXITED(childState), WEXITSTATUS(childState));
             }
         }
+        //메세지큐로 모든 수를 받아오는것!
         int kk = receiver(range[2]);
         printf("%d\n", kk);
+        printf("RT : %.1f sec\n", (double)(t2-t1)/CLK_TCK);
+        printf("UT : %.1f sec\n", (double)(mytms.tms_utime)/CLK_TCK);
+        printf("ST : %.1f sec\n", (double)(mytms.tms_stime)/CLK_TCK);
         return 0;
     }
 }

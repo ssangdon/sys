@@ -5,7 +5,10 @@
 #include <sys/ipc.h>
 #include <sys/types.h>
 #include <math.h>
+#include <sys/times.h>
+#include <limits.h>
+
 
 #define NUMS 15
 
-int input[NUMS] = {1,2,3,4,-5,-6,-7,8,9,-10,11,12,13,14,15};
+int input[NUMS] = {-1,1,0,4,-5,-6,-7,8,9,-10,11,12,13,14,15};
